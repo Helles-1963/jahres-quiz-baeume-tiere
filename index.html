@@ -1,0 +1,588 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Jahres‑Quiz – Bäume & Tiere (v1.2)</title>
+  <style>
+    :root{
+      --bg:#0b1220; --card:#111a2e; --text:#eaf0ff; --muted:rgba(234,240,255,.72);
+      --border:rgba(255,255,255,.14); --shadow:0 12px 30px rgba(0,0,0,.35);
+      --good:#34d399; --bad:#fb7185;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui;background:var(--bg);color:var(--text);display:flex;justify-content:center;padding:20px}
+    .app{max-width:980px;width:100%;background:linear-gradient(180deg,rgba(255,255,255,.05),transparent 30%),var(--card);
+      border:1px solid var(--border);border-radius:18px;padding:18px;box-shadow:var(--shadow)}
+    h1{margin:0 0 6px;font-size:20px}
+    p{margin:6px 0;color:var(--muted);line-height:1.4}
+    .hidden{display:none}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .spacer{height:10px}
+    .pill{font-size:12px;padding:7px 10px;border-radius:999px;border:1px solid var(--border);background:rgba(0,0,0,.12)}
+    .pill b{font-variant-numeric:tabular-nums}
+    button{padding:10px 14px;border-radius:14px;border:1px solid var(--border);background:#0f172a;color:var(--text);font-weight:700;cursor:pointer}
+    button.primary{background:linear-gradient(90deg,rgba(94,234,212,.22),rgba(96,165,250,.18));border-color:rgba(94,234,212,.35)}
+    button.danger{background:rgba(251,113,133,.12);border-color:rgba(251,113,133,.35)}
+    button:disabled{opacity:.55;cursor:not-allowed}
+    .panel{border:1px solid var(--border);border-radius:16px;padding:14px;background:rgba(0,0,0,.10)}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    @media (max-width:900px){.grid{grid-template-columns:1fr}}
+
+    select{background:#0f172a;color:var(--text);border:1px solid var(--border);border-radius:12px;padding:10px 12px;font-weight:700}
+
+    .opt{border:1px solid rgba(255,255,255,.18);border-radius:14px;padding:12px;margin:8px 0;cursor:pointer;background:rgba(0,0,0,.12)}
+    .opt:hover{background:rgba(255,255,255,.06)}
+    .opt.disabled{opacity:.6;cursor:not-allowed}
+
+    .fb{margin-top:12px;padding:12px;border-radius:14px;border:1px solid var(--border);display:none;line-height:1.4;background:rgba(0,0,0,.12)}
+    .fb.good{border-color:rgba(52,211,153,.55);background:rgba(52,211,153,.08)}
+    .fb.bad{border-color:rgba(251,113,133,.55);background:rgba(251,113,133,.08)}
+    .small{font-size:12px;color:rgba(234,240,255,.68)}
+
+    .imgwrap{margin-top:12px;display:none}
+    .imgcard{border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:10px;background:rgba(0,0,0,.10)}
+    .imgcard img{width:100%;max-height:320px;object-fit:contain;border-radius:12px;display:block}
+    .imgcap{margin-top:8px;font-size:12px;color:rgba(234,240,255,.70)}
+
+    .review{margin-top:10px}
+    .item{border:1px solid var(--border);border-radius:14px;padding:10px;margin:10px 0;background:rgba(0,0,0,.10)}
+    .item .q{margin:0 0 6px;font-weight:750}
+    .item .meta{font-size:12px;color:var(--muted)}
+    .ok{color:var(--good);font-weight:800}
+    .no{color:var(--bad);font-weight:800}
+    label{display:flex;gap:8px;align-items:center;color:var(--muted);font-size:13px}
+    input[type="checkbox"], input[type="radio"]{transform:translateY(1px)}
+  
+/* --- Welcome Screen --- */
+.welcome {text-align:center;padding:26px 10px}
+.welcome h1 {font-size:30px;margin:0 0 10px}
+.welcome .subtitle {font-size:16px;line-height:1.4;color:rgba(234,240,255,.78);margin:0 0 18px}
+.welcome .subtitle span {display:block;font-size:13px;opacity:.75;margin-top:6px}
+.welcome .modebox {display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin:14px 0 18px}
+.welcome .modebtn {font-size:18px;padding:14px 18px;border-radius:18px;min-width:190px}
+.welcome .modebtn.active {background:linear-gradient(90deg,rgba(96,165,250,.25),rgba(94,234,212,.18));border-color:rgba(96,165,250,.55)}
+.welcome .startbig {font-size:26px;padding:18px 34px;border-radius:22px}
+
+/* --- Mode helpers --- */
+.kids-only {display:none}
+body.kids-mode .kids-only {display:inline-block}
+body.kids-mode .adult-only {display:none !important}
+
+/* --- Kids Mode (big buttons) --- */
+body.kids-mode button {font-size:22px;padding:16px 22px;border-radius:18px}
+body.kids-mode button.primary {font-size:24px;padding:18px 24px}
+body.kids-mode .opt {font-size:22px;padding:18px;border-radius:18px}
+body.kids-mode .pill {font-size:14px}
+body.kids-mode .small {font-size:14px}
+body.kids-mode .fb {font-size:18px}
+
+</style>
+
+  <link rel="manifest" href="/jahres-quiz-baeume-tiere/manifest.webmanifest">
+  <meta name="theme-color" content="#0b1220">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Jahres-Quiz">
+  <link rel="apple-touch-icon" href="/jahres-quiz-baeume-tiere/apple-touch-icon.png">
+
+</head>
+<body>
+  <div class="app">
+
+  <section id="screenWelcome" class="panel">
+    <div class="welcome">
+      <h1>🌳🐾 Jahres‑Quiz</h1>
+      <p class="subtitle">Bäume und Tiere des Jahres – spielerisch lernen.
+        <span>Wähle den Modus und starte dann das Quiz.</span>
+      </p>
+      <div class="modebox">
+        <button id="btnAdult" class="modebtn primary active" onclick="setMode('adult')">👩‍🏫 Erwachsenen‑Modus</button>
+        <button id="btnKids" class="modebtn primary" onclick="setMode('kids')">🧒 Kinder‑Modus</button>
+      </div>
+      <button class="startbig primary" onclick="enterQuiz()">▶ Los geht’s!</button>
+      <p class="small" style="margin-top:14px">Kinder‑Modus: große Buttons & keine Reset‑/Beenden‑Schaltflächen.</p>
+    </div>
+  </section>
+
+    <h1>🖼️ Jahres‑Quiz – Bäume & Tiere</h1>
+    <p>Version 1.2: endgeil v1.1 + Jahreszahlen jetzt auch bei <b>Latein → Deutsch</b> (exakt gespiegelt).</p>
+
+    <section id="screenStart" class="panel hidden">
+      <div class="grid">
+        <div class="panel">
+          <h2 style="margin:0 0 8px;font-size:16px">Start</h2>
+          <div class="row">
+            <span class="pill">Kategorie</span>
+            <select id="datasetSelect"></select>
+          </div>
+          <p class="small" id="datasetInfo"></p>
+
+          <div class="spacer"></div>
+          <div class="row" style="margin:6px 0">
+            <span class="pill">Fragenanzahl</span>
+            <button class="primary" onclick="startGame(10)">10</button>
+            <button class="primary" onclick="startGame(15)">15</button>
+            <button class="primary" onclick="startGame(20)">20</button>
+          </div>
+
+          <div class="spacer"></div>
+          <div class="row">
+            <span class="pill">Modus</span>
+            <label><input type="radio" name="mode" value="learn" checked> Lernmodus (Feedback sofort)</label>
+            <label><input type="radio" name="mode" value="exam"> Prüfungsmodus (Auswertung am Ende)</label>
+          </div>
+
+          <div class="spacer"></div>
+          <div class="row"><label><input type="checkbox" id="adaptive" checked> Adaptiver Lernmodus (Fehler häufiger)</label></div>
+          <div class="spacer"></div>
+          <div class="row"><label><input type="checkbox" id="showType" checked> Fragetyp anzeigen</label></div>
+
+          <div class="spacer"></div>
+          <div class="row">
+            <button class="adult-only" onclick="resetSession()">Session zurücksetzen</button>
+            <button class="danger adult-only" onclick="resetAllStats()">Gesamtstatistik löschen (Kategorie)</button>
+ <button class="primary" onclick="goWelcome()">🏠 Zur Startauswahl</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2 style="margin:0 0 8px;font-size:16px">Gesamt‑Statistik (pro Kategorie)</h2>
+          <p class="small">Statistik wird pro Kategorie getrennt gespeichert.</p>
+          <div class="row">
+            <span class="pill">✅ Gesamt richtig: <b id="gCorrect">0</b></span>
+            <span class="pill">❌ Gesamt falsch: <b id="gWrong">0</b></span>
+          </div>
+          <div class="row" style="margin-top:10px">
+            <span class="pill">🔥 Beste Serie: <b id="gBestStreak">0</b></span>
+            <span class="pill">🎮 Sessions: <b id="gSessions">0</b></span>
+          </div>
+          <div class="row" style="margin-top:10px">
+            <span class="pill">🎯 Letztes Ergebnis: <b id="gLast">–</b></span>
+          </div>
+          <div class="spacer"></div>
+          <p class="small">Bilder werden <b>nur im Lernmodus</b> nach der Antwort gezeigt (Prüfungsmodus bleibt „ohne Hinweise“).</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="screenQuiz" class="panel hidden" style="margin-top:12px">
+      <div class="row" style="justify-content:space-between">
+        <div class="row">
+          <span class="pill" id="progress">Frage –</span>
+          <span class="pill" id="ptype">Typ: –</span>
+          <span class="pill" id="pCat">Kategorie: –</span>
+        </div>
+        <div class="row">
+          <span class="pill">✅ <b id="sCorrect">0</b></span>
+          <span class="pill">❌ <b id="sWrong">0</b></span>
+          <span class="pill">🔥 <b id="sStreak">0</b></span>
+        </div>
+      </div>
+
+      <div id="question" style="margin-top:10px"></div>
+      <div id="options"></div>
+      <div id="feedback" class="fb"></div>
+
+      <div id="imgwrap" class="imgwrap">
+        <div class="imgcard">
+          <img id="img" alt="Bild" />
+          <div class="imgcap" id="imgcap"></div>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:12px">
+        <button id="btnNext" class="primary" disabled>Nächste Frage</button>
+        <button onclick="endGame(true)">Spiel beenden</button>
+        
+      </div>
+      <p class="small" id="modeHint" style="margin-top:10px"></p>
+    </section>
+
+    <section id="screenEnd" class="panel hidden" style="margin-top:12px">
+      <div class="center">
+        <h2 style="margin:0 0 8px">🎉 Geschafft!</h2>
+        <p id="summary" style="margin:6px 0"></p>
+        <div class="row" style="justify-content:center;margin-top:10px">
+          <button class="primary" onclick="backToStart()">🔁 Neues Spiel</button>
+          <button class="primary" onclick="goWelcome()">🏠 Zur Startauswahl</button>
+        </div>
+      </div>
+      <div id="review" class="review"></div>
+    </section>
+
+  </div>
+
+<script>
+const DATASETS = {"Bäume": {"id": "trees", "display": "Bäume", "singular": "Baum", "genitive": "Baums", "rows": [{"key": "1989", "term1": "Stieleiche", "term2": "Quercus robur", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Stiel-Eiche-Ivenack.JPG?width=900"}, {"key": "1990", "term1": "Rotbuche", "term2": "Fagus sylvatica", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Buchenwald_1.jpg?width=900"}, {"key": "1991", "term1": "Sommerlinde", "term2": "Tilia platyphyllos", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Tilia_platyphyllos_Kellerwald_001.JPG?width=900"}, {"key": "1992", "term1": "Bergulme", "term2": "Ulmus glabra", "img": "https://de.wikipedia.org/wiki/Special:FilePath/GTH_Bergulme_4.jpg?width=900"}, {"key": "1993", "term1": "Speierling", "term2": "Sorbus domestica", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Speierling_Castell,_2.jpg?width=900"}, {"key": "1994", "term1": "Eibe", "term2": "Taxus baccata", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Eibe_Samen_mit_Samenmantel.JPG?width=900"}, {"key": "1995", "term1": "Spitzahorn", "term2": "Acer platanoides", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Spitz-Ahorn_(Acer_platanoides)_1.jpg?width=900"}, {"key": "1996", "term1": "Hainbuche", "term2": "Carpinus betulus", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Carpinus_betulus_-_Hunsr%C3%BCck_001.jpg?width=900"}, {"key": "1997", "term1": "Eberesche", "term2": "Sorbus aucuparia", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Sorbus_aucuparia_on_Y_Garn.jpg?width=900"}, {"key": "1998", "term1": "Wildbirne", "term2": "Pyrus pyraster", "img": "https://de.wikipedia.org/wiki/Special:FilePath/ND_Birnbaum_DSC01778-HDR.jpg?width=900"}, {"key": "1999", "term1": "Silberweide", "term2": "Salix alba", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Salix_alba_007.jpg?width=900"}, {"key": "2000", "term1": "Sandbirke", "term2": "Betula pendula", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Chmielno_brzoza.jpg?width=900"}, {"key": "2001", "term1": "Esche", "term2": "Fraxinus excelsior", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Fraxinus_excelsior_001.jpg?width=900"}, {"key": "2002", "term1": "Wacholder", "term2": "Juniperus communis", "img": "https://de.wikipedia.org/wiki/Special:FilePath/L%C3%BCneburger_Heide_006.jpg?width=900"}, {"key": "2003", "term1": "Schwarzerle", "term2": "Alnus glutinosa", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Alnus_glutinosa_011.jpg?width=900"}, {"key": "2004", "term1": "Weißtanne", "term2": "Abies alba", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Abies_alba_Orjen.jpg?width=900"}, {"key": "2005", "term1": "Rosskastanie", "term2": "Aesculus hippocastanum", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Horse-chestnut_800.jpg?width=900"}, {"key": "2006", "term1": "Schwarzpappel", "term2": "Populus nigra", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Schwarzpappel_bei_Bad_Kissingen.jpg?width=900"}, {"key": "2007", "term1": "Waldkiefer", "term2": "Pinus sylvestris", "img": "https://de.wikipedia.org/wiki/Special:FilePath/ScotsPine_shoot.jpg?width=900"}, {"key": "2008", "term1": "Walnussbaum", "term2": "Juglans regia", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Walnuss_-_erfroren.jpg?width=900"}, {"key": "2009", "term1": "Bergahorn", "term2": "Acer pseudoplatanus", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Acer_pseudoplatanus_Chaltenbrunnen.jpg?width=900"}, {"key": "2010", "term1": "Vogelkirsche", "term2": "Prunus avium", "img": "https://de.wikipedia.org/wiki/Special:FilePath/CILIEGIO_SECOLARE_A_BESANA_IN_BRIANZA.JPG?width=900"}, {"key": "2011", "term1": "Elsbeere", "term2": "Sorbus torminalis", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Sorbus_torminalis_Full_tree.jpg?width=900"}, {"key": "2012", "term1": "Europäische Lärche", "term2": "Larix decidua", "img": "https://de.wikipedia.org/wiki/Special:FilePath/M%C3%A9l%C3%A8ze_en_Automne.JPG?width=900"}, {"key": "2013", "term1": "Wildapfel", "term2": "Malus sylvestris", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Crab_apple_(Malus_sylvestris)_fruit_and_foliage_(3830013351).jpg?width=900"}, {"key": "2014", "term1": "Traubeneiche", "term2": "Quercus petraea", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Quercus_petraea_06.jpg?width=900"}, {"key": "2015", "term1": "Feldahorn", "term2": "Acer campestre", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Acer_campestre_Weinsberg_20070419_1.jpg?width=900"}, {"key": "2016", "term1": "Winterlinde", "term2": "Tilia cordata", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Lipa_krala_Mateja_-_Bojnice.jpg?width=900"}, {"key": "2017", "term1": "Fichte", "term2": "Picea abies", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Picea_abies.jpg?width=900"}, {"key": "2018", "term1": "Ess-Kastanie", "term2": "Castanea sativa", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Edelkastanie_(Castanea_sativa)_1.jpg?width=900"}, {"key": "2019", "term1": "Flatter-Ulme", "term2": "Ulmus laevis", "img": "https://de.wikipedia.org/wiki/Special:FilePath/UlmusLaevis1+2.jpg?width=900"}, {"key": "2020", "term1": "Robinie", "term2": "Robinia pseudoacacia", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Robina9146.JPG?width=900"}, {"key": "2021", "term1": "Stechpalme", "term2": "Ilex aquifolium", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Ilex_aquifolium_dsc00823.jpg?width=900"}, {"key": "2022", "term1": "Rotbuche", "term2": "Fagus sylvatica", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Buchenwald_1.jpg?width=900"}, {"key": "2023", "term1": "Moorbirke", "term2": "Betula pubescens", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Moorbirke.jpg?width=900"}, {"key": "2024", "term1": "Echte Mehlbeere", "term2": "Sorbus aria", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Weilburg_-_Tiergarten_-_Mehlbeere.jpg?width=900"}, {"key": "2025", "term1": "Amerikanische Rot-Eiche", "term2": "Quercus rubra", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Quercus_Rubra_Sambuy.jpg?width=900"}, {"key": "2026", "term1": "Espe", "term2": "Populus tremula", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Populus_tremula_004.jpg?width=900"}]}, "Tiere": {"id": "animals", "display": "Tiere", "singular": "Tier", "genitive": "Tiers", "rows": [{"key": "1992", "term1": "Fledermaus", "term2": "Microchiroptera", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Big-eared-townsend-fledermaus.jpg?width=900"}, {"key": "1993", "term1": "Wildkatze", "term2": "Felis silvestris", "img": "https://de.wikipedia.org/wiki/Special:FilePath/European_Wildcat_Nationalpark_Bayerischer_Wald_02.jpg?width=900"}, {"key": "1994", "term1": "Rotwild", "term2": "Cervus elaphus", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Cervus_elaphus_11.jpg?width=900"}, {"key": "1995", "term1": "Apollofalter", "term2": "Parnassius apollo", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Parnassius_apollo_oberseite.jpeg?width=900"}, {"key": "1996", "term1": "Feldhamster", "term2": "Cricetus cricetus", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Cricetus_cricetus_01.jpg?width=900"}, {"key": "1997", "term1": "Alpensteinbock", "term2": "Capra ibex", "img": "https://de.wikipedia.org/wiki/Special:FilePath/003_Wild_Alpine_Ibex_Sunset_Creux_du_Van_Mont_Racine_Photo_by_Giles_Laurent.jpg?width=900"}, {"key": "1998", "term1": "Unke", "term2": "Bombina", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Bombina_bombina_1_(Marek_Szczepanek).jpg?width=900"}, {"key": "1999", "term1": "Fischotter", "term2": "Lutra lutra", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Fischotter,_Lutra_Lutra.JPG?width=900"}, {"key": "2000", "term1": "Äskulapnatter", "term2": "Zamenis longissimus", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Zamenis_longissimus.jpg?width=900"}, {"key": "2001", "term1": "Feldhase", "term2": "Lepus europaeus", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Lepus_EM115247_(27783674376).jpg?width=900"}, {"key": "2002", "term1": "Rotwild", "term2": "Cervus elaphus", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Cervus_elaphus_11.jpg?width=900"}, {"key": "2003", "term1": "Wolf", "term2": "Canis lupus", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Eurasian_wolf_2.jpg?width=900"}, {"key": "2004", "term1": "Siebenschläfer", "term2": "Glis glis", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Siebenschl%C3%A4fer_im_Geo-Naturpark_Bergstra%C3%9Fe-Odenwald.jpg?width=900"}, {"key": "2005", "term1": "Braunbär", "term2": "Ursus arctos", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Kamchatka_Brown_Bear_near_Dvuhyurtochnoe_on_2015-07-23.jpg?width=900"}, {"key": "2006", "term1": "Seehund", "term2": "Phoca vitulina", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Seehund2cele4.jpg?width=900"}, {"key": "2007", "term1": "Elch", "term2": "Alces alces", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Alaskan_moose_pair_(6862339335).jpg?width=900"}, {"key": "2008", "term1": "Wisent", "term2": "Bison bonasus", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Bison_bonasus_(Linnaeus_1758).jpg?width=900"}, {"key": "2009", "term1": "Braunbrustigel", "term2": "Erinaceus europaeus", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Erinaceus_europaeus_LC0119.jpg?width=900"}, {"key": "2010", "term1": "Dachs", "term2": "Meles meles", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Badger-badger.jpg?width=900"}, {"key": "2011", "term1": "Eurasischer Luchs", "term2": "Lynx lynx", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Lynx_lynx_1_(Martin_Mecnarowski).jpg?width=900"}, {"key": "2012", "term1": "Gämse", "term2": "Rupicapra rupicapra", "img": "https://de.wikipedia.org/wiki/Special:FilePath/064_Wild_Chamois_Parc_r%C3%A9gional_Chasseral_Photo_by_Giles_Laurent.jpg?width=900"}, {"key": "2013", "term1": "Mauswiesel", "term2": "Mustela nivalis", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Mustela_nivalis_-British_Wildlife_Centre-4.jpg?width=900"}, {"key": "2014", "term1": "Wisent", "term2": "Bison bonasus", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Bison_bonasus_(Linnaeus_1758).jpg?width=900"}, {"key": "2015", "term1": "Feldhase", "term2": "Lepus europaeus", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Lepus_EM115247_(27783674376).jpg?width=900"}, {"key": "2016", "term1": "Feldhamster", "term2": "Cricetus cricetus", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Cricetus_cricetus_01.jpg?width=900"}, {"key": "2017", "term1": "Haselmaus", "term2": "Muscardinus avellanarius", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Haselmaus.jpg?width=900"}, {"key": "2018", "term1": "Europäische Wildkatze", "term2": "Felis silvestris", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Felis_silvestris_silvestris_Luc_Viatour.jpg?width=900"}, {"key": "2019", "term1": "Reh", "term2": "Capreolus capreolus", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Chevreuil(brocard)-HAYE_sylvain.jpg?width=900"}, {"key": "2020", "term1": "Maulwurf", "term2": "Talpa europaea", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Mr_Mole.jpg?width=900"}, {"key": "2021", "term1": "Fischotter", "term2": "Lutra lutra", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Fischotter,_Lutra_Lutra.JPG?width=900"}, {"key": "2022", "term1": "Gewöhnlicher Schweinswal", "term2": "Phocoena phocoena", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Ecomare_-_bruinvissen_Michael_en_Jose_2012_(bruinvissen-michael-jose2012-1551-sd).jpg?width=900"}, {"key": "2023", "term1": "Gartenschläfer", "term2": "Eliomys quercinus", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Gartenschlaefer082014a.jpg?width=900"}, {"key": "2024", "term1": "Braunbrustigel", "term2": "Erinaceus europaeus", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Erinaceus_europaeus_LC0119.jpg?width=900"}, {"key": "2025", "term1": "Alpenschneehase", "term2": "Lepus timidus varronis", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Mountain_hare-Lepus_timidus.jpg?width=900"}, {"key": "2026", "term1": "Rothirsch", "term2": "Cervus elaphus", "img": "https://de.wikipedia.org/wiki/Special:FilePath/Cervus_elaphus_11.jpg?width=900"}]}};
+
+// Utils
+const $ = (id)=>document.getElementById(id);
+function shuffle(arr){const a=arr.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a;}
+function uniq(arr){return Array.from(new Set(arr));}
+function pickOne(arr){return arr[Math.floor(Math.random()*arr.length)];}
+function esc(s){return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');}
+function pickNFromPool(pool, excludeSet, n){const cand = shuffle(uniq(pool.filter(x=>!excludeSet.has(x))));return cand.slice(0,n);}
+function pick3(correct,pool){const candidates = shuffle(uniq(pool.filter(x=>x!==correct)));return shuffle([correct, ...candidates.slice(0,2)]);}
+function getMode(){return document.querySelector('input[name="mode"]:checked').value;}
+
+function weightedPick(items, weights){
+  let total=0; for(const it of items){ total += (weights[it.key]||1); }
+  let r=Math.random()*total;
+  for(const it of items){ r -= (weights[it.key]||1); if(r<=0) return it; }
+  return items[items.length-1];
+}
+
+// Dataset selection
+const sel = $('datasetSelect');
+let datasetKey = 'Bäume';
+function populateSelect(){
+  sel.innerHTML='';
+  Object.keys(DATASETS).forEach(k=>{
+    const opt=document.createElement('option');
+    opt.value=k; opt.textContent=DATASETS[k].display;
+    sel.appendChild(opt);
+  });
+  sel.value = datasetKey;
+}
+populateSelect();
+
+function currentDS(){return DATASETS[datasetKey];}
+function currentRows(){return currentDS().rows;}
+
+function renderDatasetInfo(){
+  const ds = currentDS();
+  $('datasetInfo').textContent = `Aktuell: ${ds.display} — Datensätze: ${ds.rows.length}. (Bild-Links: ${ds.rows.filter(r=>r.img).length})`;
+}
+
+sel.addEventListener('change', ()=>{
+  datasetKey = sel.value;
+  loadGlobal();
+});
+
+// Persistent stats per dataset
+function LS(){
+  const id = currentDS().id;
+  return {
+    gCorrect:`quiz_${id}_gCorrect`,
+    gWrong:`quiz_${id}_gWrong`,
+    gBestStreak:`quiz_${id}_gBestStreak`,
+    gSessions:`quiz_${id}_gSessions`,
+    gLast:`quiz_${id}_gLast`,
+    weights:`quiz_${id}_weights`
+  };
+}
+
+function loadInt(key, def=0){const v=localStorage.getItem(key);return v===null?def:Number(v)||0;}
+function saveInt(key,val){localStorage.setItem(key,String(val));}
+function loadWeights(key){try{return JSON.parse(localStorage.getItem(key)||'{}')||{};}catch(e){return {};}}
+function saveWeights(key,w){localStorage.setItem(key, JSON.stringify(w));}
+
+let gStats={correct:0,wrong:0,bestStreak:0,sessions:0,last:'–'};
+let weights={};
+
+function renderGlobal(){
+  $('gCorrect').textContent=gStats.correct;
+  $('gWrong').textContent=gStats.wrong;
+  $('gBestStreak').textContent=gStats.bestStreak;
+  $('gSessions').textContent=gStats.sessions;
+  $('gLast').textContent=gStats.last;
+  renderDatasetInfo();
+}
+
+function loadGlobal(){
+  const ls = LS();
+  gStats={
+    correct: loadInt(ls.gCorrect),
+    wrong: loadInt(ls.gWrong),
+    bestStreak: loadInt(ls.gBestStreak),
+    sessions: loadInt(ls.gSessions),
+    last: localStorage.getItem(ls.gLast) || '–'
+  };
+  weights = loadWeights(ls.weights);
+  renderGlobal();
+}
+
+function resetAllStats(){
+  const ls = LS();
+  Object.values(ls).forEach(k=>localStorage.removeItem(k));
+  loadGlobal();
+  alert('Gesamtstatistik für diese Kategorie wurde gelöscht.');
+}
+
+loadGlobal();
+
+// Question helpers
+function keysForTerm1(term1){ return currentRows().filter(x=>x.term1===term1).map(x=>String(x.key)); }
+function yearsForPair(term1, term2){ return currentRows().filter(x=>x.term1===term1 && x.term2===term2).map(x=>String(x.key)); }
+
+function buildTypes(){
+  const ds = currentDS();
+  return [
+    { key:'key_to_term1', label:`Jahr → Name`, make:(t)=>({ q:`Welcher ${ds.singular} war ${ds.singular} des Jahres ${t.key}?`, a:t.term1, opts: pick3(t.term1, currentRows().map(x=>x.term1)) }) },
+    { key:'key_to_term2', label:`Jahr → lateinischer Name`, make:(t)=>({ q:`Wie lautet der lateinische Name des ${ds.genitive} des Jahres ${t.key}?`, a:t.term2, opts: pick3(t.term2, currentRows().map(x=>x.term2)) }) },
+    { key:'term1_to_term2', label:`Name → lateinischer Name`, make:(t)=>({ q:`Wie lautet der lateinische Name der/des ${t.term1}?`, a:t.term2, opts: pick3(t.term2, currentRows().map(x=>x.term2)) }) },
+    { key:'term2_to_term1', label:`lateinischer Name → Name`, make:(t)=>({ q:`Wie lautet der deutsche Name zu ${t.term2}?`, a:t.term1, opts: pick3(t.term1, currentRows().map(x=>x.term1)) }) },
+    { key:'term1_to_key', label:`Name → Jahr`, make:(t)=>{
+        const ks = keysForTerm1(t.term1);
+        if(ks.length>1){
+          const exclude=new Set(ks);
+          const wrongs=pickNFromPool(currentRows().map(x=>String(x.key)), exclude, 2);
+          return { q:`In welchem dieser Jahre war ${t.term1} ${ds.singular} des Jahres?`, a:ks, aDisplay:ks.join(' oder '), opts: shuffle(ks.concat(wrongs)) };
+        }
+        const correct=String(t.key);
+        return { q:`In welchem Jahr war ${t.term1} ${ds.singular} des Jahres?`, a:correct, aDisplay:correct, opts: pick3(correct, currentRows().map(x=>String(x.key))) };
+    } }
+  ];
+}
+
+function buildHint(typeKey, t){
+  if(typeKey==='key_to_term2'){
+    const v=[
+      `Botanik‑Kurzform: <b>${t.key}</b> = <b><i>${esc(t.term2)}</i></b> (<b>${esc(t.term1)}</b>).`,
+      `Merke: ${t.key} → <b><i>${esc(t.term2)}</i></b> (<b>${esc(t.term1)}</b>).`
+    ];
+    return pickOne(v);
+  }
+
+  if(typeKey==='term1_to_term2'){
+    const ys = yearsForPair(t.term1, t.term2);
+    const label = ys.length>1 ? 'Jahre' : 'Jahr';
+    const v=[
+      `Merke: <b>${esc(t.term1)}</b> → <b><i>${esc(t.term2)}</i></b> (${label}: <b>${ys.join('</b>, <b>')}</b>).`,
+      `Einprägen: ${esc(t.term1)} = <b><i>${esc(t.term2)}</i></b> (${label}: <b>${ys.join('</b>, <b>')}</b>).`
+    ];
+    return pickOne(v);
+  }
+
+  // NEW v1.2: mirror years for Latin -> German
+  if(typeKey==='term2_to_term1'){
+    const ys = yearsForPair(t.term1, t.term2);
+    const label = ys.length>1 ? 'Jahre' : 'Jahr';
+    const v=[
+      `Merke: <b><i>${esc(t.term2)}</i></b> → <b>${esc(t.term1)}</b> (${label}: <b>${ys.join('</b>, <b>')}</b>).`,
+      `Einprägen: <b><i>${esc(t.term2)}</i></b> = <b>${esc(t.term1)}</b> (${label}: <b>${ys.join('</b>, <b>')}</b>).`
+    ];
+    return pickOne(v);
+  }
+
+  if(typeKey==='term1_to_key'){
+    const ds = currentDS();
+    const ks = keysForTerm1(t.term1);
+    if(ks.length>1) return `Merke: <b>${esc(t.term1)}</b> war in <b>${ks.join('</b> und <b>')}</b> ${ds.singular} des Jahres.`;
+    return `Merke: <b>${esc(t.term1)}</b> → <b>${t.key}</b>.`;
+  }
+
+  const variants={
+    key_to_term1:[`Merke: <b>${t.key}</b> → <b>${esc(t.term1)}</b>.`]
+  };
+  return pickOne(variants[typeKey]||['']);
+}
+
+// Session
+let session=null;
+function resetSession(){ session=null; $('sCorrect').textContent='0'; $('sWrong').textContent='0'; $('sStreak').textContent='0'; alert('Session zurückgesetzt (nur aktuell).'); }
+function show(screen){ ['screenWelcome','screenStart','screenQuiz','screenEnd'].forEach(id=>$(id).classList.add('hidden')); $(screen).classList.remove('hidden'); }
+
+function startGame(n){
+  const ds = currentDS();
+  if(ds.rows.length===0){ alert(`Kategorie „${ds.display}“ ist leer.`); return; }
+
+  const mode=getMode();
+  session={total:n,idx:0,correct:0,wrong:0,streak:0,bestStreak:0,mode,adaptive:$('adaptive').checked,showType:$('showType').checked,answers:[]};
+
+  const ls = LS();
+  gStats.sessions += 1; saveInt(ls.gSessions, gStats.sessions);
+  renderGlobal();
+
+  $('modeHint').textContent=(mode==='exam')
+    ? 'Prüfungsmodus: Keine Lösung während des Quiz – Auswertung am Ende.'
+    : (session.adaptive ? 'Lernmodus (adaptiv): Fehler werden häufiger abgefragt.' : 'Lernmodus: Sofortiges Feedback.');
+
+  $('pCat').textContent = `Kategorie: ${ds.display}`;
+  show('screenQuiz');
+  nextQuestion();
+}
+
+function chooseRow(){
+  const rows=currentRows();
+  if(session.adaptive) return weightedPick(rows, weights);
+  return rows[Math.floor(Math.random()*rows.length)];
+}
+
+const GOOD=['✅ Völlig korrekt!','✅ Passt!','✅ Treffer!','✅ Genau so!','✅ Sitzt!'];
+const BAD=['❌ Leider falsch – aber gute Lernchance.','❌ Nicht ganz.','❌ Fast – beim nächsten Mal sitzt es.'];
+
+function applyAdaptive(ok, t){
+  const ls = LS();
+  const k=t.key;
+  const w=weights[k]||1;
+  weights[k]= ok ? Math.max(1,w-0.2) : Math.min(12,w+1.2);
+  saveWeights(ls.weights, weights);
+}
+
+function lockOptions(){ document.querySelectorAll('.opt').forEach(x=>x.classList.add('disabled')); }
+function isCorrectAnswer(cur, v){ return Array.isArray(cur.a) ? cur.a.includes(v) : v===cur.a; }
+function correctDisplay(cur){ return Array.isArray(cur.a) ? cur.a.join(' oder ') : String(cur.a); }
+
+function clearImage(){ $('imgwrap').style.display='none'; $('img').src=''; $('imgcap').textContent=''; }
+function showImageIfAny(t){ if(!t.img) return; $('img').src=t.img; $('imgcap').innerHTML=`Bild: <b>${esc(t.term1)}</b> (<i>${esc(t.term2)}</i>)`; $('imgwrap').style.display='block'; }
+
+function nextQuestion(){
+  if(!session) return;
+  if(session.idx>=session.total){ endGame(false); return; }
+  session.idx += 1;
+
+  $('btnNext').disabled=true;
+  $('feedback').style.display='none';
+  $('feedback').className='fb';
+  $('feedback').innerHTML='';
+  $('options').innerHTML='';
+  clearImage();
+
+  const t = chooseRow();
+  const TYPES = buildTypes();
+  const ty = TYPES[Math.floor(Math.random()*TYPES.length)];
+  const built = ty.make(t);
+
+  session.current={typeKey:ty.key,typeLabel:ty.label,q:built.q,a:built.a,aDisplay:built.aDisplay??built.a,opts:built.opts,t};
+
+  $('progress').textContent = `Frage ${session.idx} von ${session.total}`;
+  $('ptype').style.display = session.showType ? 'inline-block' : 'none';
+  $('ptype').textContent = `Typ: ${ty.label}`;
+  $('question').innerHTML = `<h2 style="margin:10px 0 0">${esc(session.current.q)}</h2>`;
+
+  session.current.opts.forEach(v=>{
+    const d=document.createElement('div');
+    d.className='opt';
+    d.textContent=v;
+    d.onclick=()=>answer(v);
+    $('options').appendChild(d);
+  });
+
+  $('sCorrect').textContent=session.correct;
+  $('sWrong').textContent=session.wrong;
+  $('sStreak').textContent=session.streak;
+}
+
+function answer(v){
+  if(!session || session.locked) return;
+  session.locked=true;
+  lockOptions();
+ try{
+
+  const cur=session.current;
+  const ok=isCorrectAnswer(cur,v);
+
+  if(ok){ session.correct+=1; session.streak+=1; session.bestStreak=Math.max(session.bestStreak, session.streak); }
+  else { session.wrong+=1; session.streak=0; }
+
+  const ls = LS();
+  if(ok){ gStats.correct+=1; saveInt(ls.gCorrect,gStats.correct); }
+  else { gStats.wrong+=1; saveInt(ls.gWrong,gStats.wrong); }
+  gStats.bestStreak=Math.max(gStats.bestStreak, session.bestStreak); saveInt(ls.gBestStreak, gStats.bestStreak);
+  renderGlobal();
+
+  if(session.adaptive) applyAdaptive(ok, cur.t);
+
+  const hint=buildHint(cur.typeKey, cur.t);
+  session.answers.push({idx:session.idx,typeLabel:cur.typeLabel,q:cur.q,chosen:v,correct:correctDisplay(cur),ok,hint});
+
+  $('sCorrect').textContent=session.correct;
+  $('sWrong').textContent=session.wrong;
+  $('sStreak').textContent=session.streak;
+
+  $('btnNext').disabled=false;
+
+  const fb=$('feedback');
+  fb.className='fb '+(ok?'good':'bad');
+  fb.style.display='block';
+
+  if(session.mode==='learn'){
+    const lead=ok?pickOne(GOOD):pickOne(BAD);
+    const correctLine= ok ? '' : `<br>Richtig: <b>${esc(correctDisplay(cur))}</b>`;
+    fb.innerHTML = `${lead}${correctLine}<br>${hint}`;
+    showImageIfAny(cur.t);
+  } else {
+    fb.innerHTML = ok ? '✅ Antwort gespeichert.' : '❌ Antwort gespeichert.';
+  }
+ } finally {
+  session.locked=false;
+ }
+}
+
+$('btnNext').addEventListener('click', ()=>nextQuestion());
+
+function endGame(early){
+  if(!session) return;
+  const ls=LS();
+  const mode=session.mode, total=session.total, correct=session.correct, wrong=session.wrong, best=session.bestStreak;
+  gStats.last=`${correct}/${total} (${mode==='exam'?'Prüfung':'Lernen'})`; localStorage.setItem(ls.gLast, gStats.last);
+  renderGlobal();
+
+  show('screenEnd');
+  $('summary').innerHTML = `${early?'Spiel beendet. ':''}Richtig: <b>${correct}</b> von <b>${total}</b> — Falsch: <b>${wrong}</b> — Beste Serie: <b>${best}</b>`;
+
+  const rev=$('review'); rev.innerHTML='';
+  const title=document.createElement('div');
+  title.innerHTML = `<h3 style="margin:18px 0 8px">Auswertung & Review</h3><p class="small">Deine Antworten (inkl. Merksatz). Bilder sind absichtlich <b>nicht</b> im Review (nur Feedbackbereich).</p>`;
+  rev.appendChild(title);
+
+  session.answers.forEach(a=>{
+    const div=document.createElement('div'); div.className='item';
+    div.innerHTML = `
+      <div class="q">${a.ok?'<span class="ok">✅</span>':'<span class="no">❌</span>'} Frage ${a.idx}: ${esc(a.q)}</div>
+      <div class="meta">Typ: ${esc(a.typeLabel)}</div>
+      <div style="margin-top:6px">Deine Antwort: <b>${esc(a.chosen)}</b></div>
+      <div>Richtig: <b>${esc(a.correct)}</b></div>
+      <div class="small" style="margin-top:6px">${a.hint}</div>
+    `;
+    rev.appendChild(div);
+  });
+
+  session=null;
+}
+
+function backToStart(){ $('review').innerHTML=''; show('screenStart'); }
+
+
+// --- Welcome / Mode handling ---
+let __mode = 'adult';
+function setMode(m){
+  __mode = (m === 'kids') ? 'kids' : 'adult';
+  const bA = document.getElementById('btnAdult');
+  const bK = document.getElementById('btnKids');
+  if(bA && bK){
+    bA.classList.toggle('active', __mode==='adult');
+    bK.classList.toggle('active', __mode==='kids');
+  }
+}
+
+function goWelcome(){
+  try{ session = null; }catch(e){}
+  if(typeof show === 'function') show('screenWelcome');
+}
+
+function enterQuiz(){
+  document.body.classList.toggle('kids-mode', __mode==='kids');
+  if(typeof show === 'function') show('screenStart');
+}
+
+// expose
+window.resetAllStats=resetAllStats;
+window.resetSession=resetSession;
+window.startGame=startGame;
+window.backToStart=backToStart;
+window.endGame=endGame;
+</script>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/jahres-quiz-baeume-tiere/service-worker.js').catch(()=>{});
+    });
+  }
+</script>
+
+</body>
+</html>
