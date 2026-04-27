@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+
+  <title>Jahres‑Quiz – Bäume & Tiere</title>
+
+  <link rel="manifest" href="/jahres-quiz-baeume-tiere/manifest.webmanifest">
+  <meta name="theme-color" content="#0b1220">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <style>
+    body{margin:0;font-family:system-ui;background:#0b1220;color:#eaf0ff;padding:20px}
+    .hidden{display:none}
+    .panel{border:1px solid rgba(255,255,255,.15);border-radius:18px;padding:18px;background:#111a2e}
+    button{padding:10px 16px;border-radius:14px;background:#0f172a;color:#eaf0ff;font-weight:700}
+
+    /* Welcome */
+    .welcome{text-align:center}
+    .welcome h1{font-size:30px}
+    .modebox{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin:20px 0}
+
+    /* Kids mode */
+    body.kids-mode button{font-size:22px;padding:16px 22px}
+  </style>
+</head>
+
+<body>
+<div class="app">
+
+  <!-- Welcome -->
+  <section id="screenWelcome" class="panel">
+    <div class="welcome">
+      <h1>🌳🐾 Jahres‑Quiz</h1>
+      <p>Modus wählen und loslegen</p>
+
+      <div class="modebox">
+        <button onclick="setMode('adult')">👩‍🏫 Erwachsenen‑Modus</button>
+        <button onclick="setMode('kids')">🧒 Kinder‑Modus</button>
+      </div>
+
+      <button onclick="enterQuiz()">▶ Los geht’s!</button>
+    </div>
+  </section>
+
+  <!-- Start -->
+  <section id="screenStart" class="panel hidden">
+    <button onclick="startGame()">Spiel starten</button>
+  </section>
+
+  <!-- Quiz -->
+  <section id="screenQuiz" class="panel hidden">
+    <p>Frage …</p>
+    <button>Nächste Frage</button>
+    <button onclick="endGame()">Spiel beenden</button>
+  </section>
+
+  <!-- End -->
+  <section id="screenEnd" class="panel hidden">
+    <h2>🎉 Geschafft!</h2>
+    <button onclick="startGame()">🔁 Neues Spiel</button>
+    <button onclick="goWelcome()">🏠 Zur Startauswahl</button>
+  </section>
+
+</div>
+
+<script>
+let mode='adult';
+
+function setMode(m){
+  mode=m;
+  document.body.classList.toggle('kids-mode',m==='kids');
+}
+
+function show(id){
+  ['screenWelcome','screenStart','screenQuiz','screenEnd']
+    .forEach(x=>document.getElementById(x).classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+}
+
+function enterQuiz(){ show('screenStart'); }
+function startGame(){ show('screenQuiz'); }
+function endGame(){ show('screenEnd'); }
+function goWelcome(){ show('screenWelcome'); }
+</script>
+</body>
+</html>
